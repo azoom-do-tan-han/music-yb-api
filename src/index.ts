@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { searchVideos, getTrendingVideos } from './youtube';
 import * as cache from './cache';
+import { readFavorites, addFavorite, removeFavorite, VideoItem } from './favorites';
 
 dotenv.config();
 
@@ -47,6 +48,25 @@ app.get('/api/trending', async (req, res) => {
     console.error('Trending error', err);
     return res.status(500).json({ error: 'Failed to fetch trending videos' });
   }
+});
+
+app.get('/api/favorites', (_req, res) => {
+  res.json(readFavorites());
+});
+
+app.post('/api/favorites', (req, res) => {
+  const { id, title, thumbnail, channelTitle } = req.body as Partial<VideoItem>;
+  if (!id || !title || !thumbnail || !channelTitle) {
+    return res.status(400).json({ error: 'Missing required fields: id, title, thumbnail, channelTitle' });
+  }
+  const updated = addFavorite({ id, title, thumbnail, channelTitle });
+  return res.json(updated);
+});
+
+app.delete('/api/favorites/:id', (req, res) => {
+  const { id } = req.params;
+  const updated = removeFavorite(id);
+  res.json(updated);
 });
 
 app.listen(PORT, '0.0.0.0', () => {

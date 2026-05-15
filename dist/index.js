@@ -41,6 +41,7 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const youtube_1 = require("./youtube");
 const cache = __importStar(require("./cache"));
+const favorites_1 = require("./favorites");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
@@ -82,6 +83,22 @@ app.get('/api/trending', async (req, res) => {
         console.error('Trending error', err);
         return res.status(500).json({ error: 'Failed to fetch trending videos' });
     }
+});
+app.get('/api/favorites', (_req, res) => {
+    res.json((0, favorites_1.readFavorites)());
+});
+app.post('/api/favorites', (req, res) => {
+    const { id, title, thumbnail, channelTitle } = req.body;
+    if (!id || !title || !thumbnail || !channelTitle) {
+        return res.status(400).json({ error: 'Missing required fields: id, title, thumbnail, channelTitle' });
+    }
+    const updated = (0, favorites_1.addFavorite)({ id, title, thumbnail, channelTitle });
+    return res.json(updated);
+});
+app.delete('/api/favorites/:id', (req, res) => {
+    const { id } = req.params;
+    const updated = (0, favorites_1.removeFavorite)(id);
+    res.json(updated);
 });
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Backend listening on http://0.0.0.0:${PORT}`);
